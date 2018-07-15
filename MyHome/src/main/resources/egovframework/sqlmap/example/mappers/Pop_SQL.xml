@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.popup.service.impl.PopMapper">
+
+	<!-- 유저정보 조회 -->
+	<select id="selectPopUserInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT  USER_ID
+			   ,CLCO_STAT_DIV_CODE
+			   ,USER_NM
+			   ,CLCO_NM
+		  FROM  USER_INFO
+		 WHERE  USER_ID = #{signTrgNo}
+	</select>
+	
+	<select id="selectCmbnList" parameterType="egovMap" resultType="egovMap">
+		SELECT  CMBN_CODE
+		       ,CMBN_CODE_NM
+		  FROM  CMBN_CODE
+		 WHERE  CMBN_CODE_GROUP_ID = #{cmbnCodeGroupId}
+		   AND  USE_YN = 'Y'
+		 ORDER BY SORT_SEQ
+	</select>
+	
+		<insert id="insertTsmIndInfoEduMgt" parameterType="egovMap">
+		INSERT INTO tsm_ind_info_edu_mgt
+			(SIGN_TRG_NO,
+			EDU_DATE,
+			EDU_TRG_DIV_CODE,
+			EDU_CNTT,
+			MNGR_PST_NM,
+			MNGR_PSTN_NM,
+			MNGR_NM,
+			UTAKMN_PST_NM,
+			UTAKMN_PSTN_NM,
+			UTAKMN_NM,
+			WRTMN_PST_NM,
+			WRTMN_PSTN_NM,
+			WRTMN_NM,
+			EMPL_PNUM_CNT,
+			IND_INFO_PROC_PNUM_CNT,
+			IND_INFO_PROC_UTAKMN_NM,
+			WRTMN_UTAK_BIZS_CODE,
+			WRTMN_UTAK_ETC_CNTT,
+			ETC_PPL_SBJT_CNTT)
+			VALUES
+			(#{signTrgNo},
+			#{eduDate},
+			#{eduTrgDivCode},
+			#{eduCntt},
+			#{mngrPstNm},
+			#{mngrPstnNm},
+			#{mngrNm},
+			#{utakmnPstNm},
+			#{utakmnPstnNm},
+			#{utakmnNm},
+			#{wrtmnPstNm},
+			#{wrtmnPstnNm},
+			#{wrtmnNm},
+			#{emplPnumCnt},
+			#{indInfoProcPnumCnt},
+			#{indInfoProcUtakmnNm},
+			#{wrtmnUtakBizsCode},
+			#{wrtmnUtakEtcCntt},
+			#{etcPplSbjtCntt})
+	</insert>
+	
+	<insert id="insertTsmIndInfoEduDtl" parameterType="egovMap">
+	INSERT INTO tsm_ind_info_edu_dtl
+(SIGN_TRG_NO,
+IND_INFO_QUST_CODE,
+IND_INFO_QUST_SCOR)
+VALUES
+(#{signTrgNo},
+#{qustCode},
+#{qustCodeNm})
+	</insert>
+	
+	<update id="updateUserInfo">
+
+		UPDATE USER_INFO
+		SET CLCO_STAT_DIV_CODE = '20'
+			  WHERE USER_ID = #{signTrgNo}
+
+	</update>
+	
+	<select id="selectTsmIndInfoEduMgtInfo" parameterType="egovMap" resultType="egovMap">
+SELECT SIGN_TRG_NO,
+    EDU_DATE,
+    EDU_TRG_DIV_CODE,
+    EDU_CNTT,
+    MNGR_PST_NM,
+    MNGR_PSTN_NM,
+    UTAKMN_PST_NM,
+    UTAKMN_PSTN_NM,
+    UTAKMN_NM,
+    WRTMN_PST_NM,
+    WRTMN_PSTN_NM,
+    WRTMN_NM,
+    EMPL_PNUM_CNT,
+    IND_INFO_PROC_PNUM_CNT,
+    IND_INFO_PROC_UTAKMN_NM,
+    WRTMN_UTAK_BIZS_CODE,
+    WRTMN_UTAK_ETC_CNTT,
+    ETC_PPL_SBJT_CNTT,
+    MNGR_NM
+FROM tsm_ind_info_edu_mgt
+WHERE SIGN_TRG_NO = #{signTrgNo}
+	</select>
+	
+	<select id="selectTsmIndInfoEduDtlList" parameterType="egovMap" resultType="egovMap">
+SELECT DTL.IND_INFO_QUST_CODE
+       		  ,DTL.IND_INFO_QUST_SCOR
+       		  ,CM.CMBN_CODE_NM
+		  FROM TSM_IND_INFO_EDU_DTL DTL
+       	      ,CMBN_CODE CM
+		 WHERE DTL.IND_INFO_QUST_CODE = CM.CMBN_CODE
+  		   AND CM.CMBN_CODE_GROUP_ID = 'IND_INFO_QUST_CODE'
+           AND DTL.SIGN_TRG_NO = #{signTrgNo}
+	</select>
+</mapper>

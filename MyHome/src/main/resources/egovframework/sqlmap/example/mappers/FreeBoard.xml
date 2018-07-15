@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.board.service.impl.FreeBoardMapper">
+
+<!-- <select id="selectBoardList" resultType="egovMap">
+	SELECT h.hno,
+  		h.title,
+   		h.content,
+   		h.writer,
+   		TO_CHAR(h.reg_date, 'YYYY-MM-DD HH24:MI:SS') as reg_date,
+   		h.view_cnt,
+   		NVL(f.favor_cnt, 0) favor_cnt
+  	FROM freeboard h 
+  		LEFT OUTER JOIN (
+  			SELECT hno,
+     			count(*) favor_cnt
+  			FROM favorite
+ 			WHERE use_yn = 'Y'
+ 				GROUP BY hno
+  		) f ON h.hno = f.hno
+  		
+	WHERE use_yn = 'Y'
+	ORDER BY hno
+</select> -->
+
+<select id="selectBoardList" parameterType="boardPagingVO" resultType="egovMap">
+SELECT  a.*
+            FROM  (
+            SELECT  a.*,
+                      ROWNUM rnum,
+                      FLOOR((ROWNUM - 1) /#{rows} + 1) pageNumber
+                FROM  (
+                SELECT h.hno,
+			  		h.title,
+			   		h.content,
+			   		h.writer,
+			   		TO_CHAR(h.reg_date, 'YYYY-MM-DD HH24:MI') as reg_date,
+			   		h.view_cnt,
+			   		NVL(f.favor_cnt, 0) favor_cnt
+        FROM freeboard h
+        	LEFT OUTER JOIN (
+  			SELECT hno,
+     			count(*) favor_cnt
+  			FROM favorite
+ 			WHERE use_yn = 'Y'
+ 				GROUP BY hno
+  			) f ON h.hno = f.hno
+  			WHERE use_yn = 'Y'
+  			order by hno desc
+        ) a
+      ) a
+           WHERE  a.pageNumber = #{page}
+        order by  a.rnum
+</select>
+
+<select id="selectBoardListCnt" parameterType="boardPagingVO" resultType="egovMap">
+    SELECT  count(*) TOTAL_TOT_CNT
+             , CEIL(count(*) / #{rows}) TOTAL_PAGE
+    FROM  freeboard
+    WHERE use_yn = 'Y'
+ 		ORDER BY hno DESC
+ </select>
+
+<insert id="insertBoardList" parameterType="boardVO">
+	INSERT INTO freeboard
+	(
+		hno,
+		title,
+		content,
+		writer,
+		reg_date
+	)
+	 
+	values (
+		#{hno},
+		#{title},
+		#{content},
+		#{writer},
+		SYSDATE
+	)
+
+</insert>
+
+
+
+<update id="updateBoardList" parameterType="boardVO">
+   UPDATE freeboard 
+   	  SET title = #{title},
+       	  content = #{content},
+       	  mod_date = SYSDATE
+    WHERE hno = #{hno}
+</update>
+    
+
+
+
+<select id="boardDetail" parameterType="int" resultType="boardVO">
+   SELECT 	hno,
+			title,
+			content,
+			writer,
+			reg_date
+    FROM freeboard 
+    WHERE hno = #{_parameter}
+</select>
+ 
+ <!-- oracle -->
+<select id="getBoardHno" resultType="int">
+	SELECT NVL(MAX(hno)+1,1)
+	FROM freeboard
+</select>
+
+
+ <!-- oracle -->
+<delete id="deleteBoardList" parameterType="int">
+    UPDATE freeboard
+       SET use_yn = 'N'
+    WHERE hno = #{hno}
+</delete>
+
+<insert id="insertFavorite" parameterType="map">
+	MERGE INTO favorite
+	USING DUAL
+	ON (hno = #{hno} AND member_nm = #{memberNm})
+	WHEN MATCHED THEN
+	UPDATE SET
+		use_yn	  = 'Y'
+	WHEN NOT MATCHED THEN
+	INSERT (hno, member_nm)
+	VALUES (#{hno}, #{memberNm})
+	
+</insert>
+
+<update id="deleteFavorite" parameterType="map">
+	UPDATE favorite
+		SET use_yn = 'N'
+	WHERE hno = #{hno}
+		AND member_nm = #{memberNm}
+</update>
+
+
+<select id="selectFavoriteTotCnt" parameterType="map" resultType="int">
+	SELECT COUNT(*)
+	FROM favorite
+	WHERE hno	= #{hno}
+		AND use_yn = 'Y'
+</select>
+
+<select id="selectFavoriteOwnCnt" parameterType="map" resultType="int">
+	SELECT COUNT(*)
+	FROM favorite
+	WHERE hno = #{hno}
+		AND member_nm = #{memberNm}
+		AND use_yn = 'Y'
+</select>
+
+<update id="updateViewCnt" parameterType="int">
+UPDATE freeboard 
+     SET view_cnt = view_cnt + 1
+    WHERE hno = #{hno}
+</update>
+
+<select id="getPreviousHno" parameterType="int" resultType="int">
+<![CDATA[
+	     SELECT 
+			NVL(max(hno), 0) hno 
+	 	FROM freeboard 
+	 	WHERE hno < #{hno}
+	 		AND USE_YN = 'Y'
+]]>
+</select>
+
+<select id="getNextHno" parameterType="int" resultType="int">
+<![CDATA[
+	   SELECT 
+			NVL(min(hno), 0) hno  
+	 	FROM freeboard 
+	 	WHERE hno > #{hno}
+	 		AND USE_YN = 'Y'
+]]>
+</select>
+
+<select id="selectReplyList" parameterType="map" resultType="egovMap">
+	SELECT rep_no,
+	   rep_content,
+	   rep_writer,
+	   TO_CHAR(reg_date, 'YYYY/MM/DD HH24:MI') as reg_date
+	FROM freeboard_reply
+	WHERE hno = #{hno}
+	  AND use_yn = 'Y'
+	ORDER BY rep_no
+</select>
+
+
+<insert id="insertReply" parameterType="map">
+<selectKey resultType="int" keyProperty="repNo" order="BEFORE">
+	SELECT NVL(MAX(rep_no),0)+1 AS repNo
+	FROM freeboard_reply
+</selectKey>
+	INSERT INTO freeboard_reply
+	(
+		hno,
+		rep_content,
+		rep_writer,
+		reg_date
+	)
+	values
+	(
+		#{hno},
+		#{repContent},
+		#{repWriter},
+		SYSDATE	
+	)
+</insert>
+
+<!-- <insert id="insertReply"  parameterType="map" useGeneratedKeys="true" keyProperty="repNo">
+INSERT INTO freeboard_reply
+(
+	hno,
+	rep_content,
+	rep_writer,
+	reg_date
+)
+values 
+(
+	#{hno},
+	#{repContent},
+	#{repWriter},
+	SYSDATE
+)
+</insert> -->
+
+
+<select id="getReplyItem" parameterType="map" resultType="egovMap">
+	SELECT  hno,  
+	    	rep_no,
+			rep_content,
+			rep_writer,
+			TO_CHAR(reg_date, 'YYYY/MM/DD HH24:MI') as reg_date
+	FROM 	freeboard_reply 
+	WHERE 	hno= #{hno}
+	        AND rep_no= #{repNo}
+</select>
+
+<update id="deleteReplyItem" parameterType="map">
+	UPDATE freeboard_reply 
+       SET use_yn = 'N'
+     WHERE hno = #{hno}
+       AND rep_no = #{repNo}
+</update>
+
+
+<update id="updateReplyItem" parameterType="map">
+	UPDATE freeboard_reply 
+       SET rep_content = #{repContent},
+          mod_date= SYSDATE
+     WHERE hno = #{hno}
+       AND rep_no = #{repNo}
+</update>
+
+
+</mapper>

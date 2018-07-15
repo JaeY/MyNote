@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.townhall.service.impl.TownHallMapper">
+
+   <!-- 메인 조회 -->
+   <select id="selectWelcomeWebServiceList" parameterType="egovMap" resultType="egovMap">
+      SELECT TOWNHALL,
+          UPGRADECOST,
+          UPGRADETIME,
+          POPULATION,
+          HP
+      FROM TOWNHALLINFO
+      WHERE 1=1
+      <if test='hanq != null'>
+         AND COUNTRYNAME = #{hanq}
+       
+      </if>
+   </select>
+
+   
+
+   
+
+  
+  
+  
+ 
+
+
+
+
+
+
+
+
+
+
+</mapper>

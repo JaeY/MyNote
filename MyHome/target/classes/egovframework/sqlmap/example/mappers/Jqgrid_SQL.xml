@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.jqgrid.service.impl.JqgridMapper">
+
+	<select id="selectJqgridList" parameterType="jqgridVO" resultType="egovMap">
+		SELECT  a.*
+	      FROM  (
+			SELECT  a.*,
+			        ROWNUM rnum,
+			        FLOOR((ROWNUM - 1) /#{rows} + 1) pageNumber
+			  FROM  (
+					SELECT  seq
+					     , mber_id,mber_nm
+						
+					  FROM hanq_user
+					 WHERE 1=1
+					 <if test='serviceImplYn != null'>
+						 <choose>
+						 	<when test='serviceImplYn == "A"'>
+						 		AND name = 'hanq'
+						 	</when>
+						   	<when test='serviceImplYn == "B"'>
+						 		AND name = 'shink'
+						 	</when>
+						 	<when test='serviceImplYn == "D"'>
+						 		AND name = 'rrrr'
+						 	</when>
+					 		<otherwise>
+					 		</otherwise>
+						 </choose>
+					</if>
+				 ORDER BY seq ASC
+					) a
+				) a
+	       WHERE  a.pageNumber = #{page}
+	    order by a.rnum
+	</select>
+	
+	<select id="selectJqgridListCnt" parameterType="jqgridVO" resultType="egovMap">
+		SELECT  count(*) totalTotCnt
+        	  , CEIL(count(*) / #{rows}) totalPage
+		  FROM  hanq_user
+		 WHERE  1=1
+	  ORDER BY  seq ASC
+	</select>
+	
+	<insert id="insertJqgridList" parameterType="map">
+		<selectKey resultType="String" keyProperty="seq" order="BEFORE">
+		<!-- keyProperty 는 쿼리를 수행하고 seq 라는 이름으로 담겠다 라는 뜻 -->
+		SELECT NVL(MAX(SEQ),0)+1AS seqNo
+		FROM hanq_user
+		<!-- 위부분에서 NVL 은 MAX(SEQ)가 null 이라면 (즉 초기상태인경우) 0으로 설정하라는 것이다. 여기다가 1을 더해야
+		다음 SEQ가 구해질것이다. MAX는 최댓값이다 즉 제일 끝번호를 찾아서 1을 더하는 것이다 -->
+		</selectKey>
+		INSERT INTO hanq_user
+		(SEQ
+		 ,mber_id,mber_nm)
+		VALUES
+		(#{seq},
+		#{mberId},#{mberNm})
+	</insert>
+	
+	<update id="updateJqgridList" parameterType="map">
+		UPDATE hanq_user
+		SET   mber_id = #{mberId}
+		,mber_nm = #{mberNm}
+	
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<delete id ="deleteJqgridList" parameterType="map"><!-- 삭제 쿼리로 받아온 seq를 날린다 -->
+	DELETE FROM hanq_user WHERE SEQ=#{seq}
+	</delete>
+</mapper>
